@@ -28,7 +28,7 @@ struct ContentView: View {
     @State private var isStarting = false
     @State private var isRunning = false
     @State private var countdownToStart = 5
-    @State private var progress: CGFloat = 1.0
+    @State private var progress: CGFloat = 1.0   // 1.0 = noch volle Zeit, 0.0 = fertig
 
     @State private var showShareSheet = false
     @State private var showDonate = false
@@ -103,16 +103,18 @@ struct ContentView: View {
 
             Spacer().frame(height: 80)
 
-            statusSection
-                .offset(y: 40)
-                .padding(.bottom, -10)
-
-            timerRing
-                .offset(y: -40)
-                .padding(.bottom, 20)
 
             Spacer()
+           
+            statusSection
+                .offset(y: 40)
+                .padding(.bottom, 60)
 
+            
+            timerRing          // jetzt horizontale 1px-Linie
+                .offset(y: 0)
+                .padding(.bottom, 20)
+            
             VStack(spacing: 24) {
                 timeSelection
                 pickerSection
@@ -167,29 +169,30 @@ struct ContentView: View {
             .frame(height: 28)
     }
 
-    // MARK: - Timer Ring
+    // MARK: - Timer Line (statt Ring)
     private var timerRing: some View {
-        ZStack {
-            Circle()
-                .stroke(Color.white.opacity(0.15), lineWidth: 8)
-                .frame(width: 280, height: 280)
-                .blur(radius: 1)
+        GeometryReader { geometry in
+            let maxWidth = min(geometry.size.width - 80, 320)
+            let clampedProgress = max(0, min(1, progress))      // sicherheitshalber 0...1
+            let fillFraction = 1 - clampedProgress              // wächst von 0 → 1
+            let fillWidth = maxWidth * fillFraction
 
-            Circle()
-                .stroke(Color.black.opacity(0.15), lineWidth: 6)
-                .frame(width: 280, height: 280)
+            ZStack {
+                // Hintergrund-Linie (dezent)
+                Rectangle()
+                    .frame(width: maxWidth, height: 1)
+                    .foregroundColor(Color.white.opacity(0.4))
 
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    Color.green,
-                    style: StrokeStyle(lineWidth: 6, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-                .frame(width: 280, height: 280)
-                .shadow(color: Color.green.opacity(0.7), radius: 6)
-                .animation(.linear(duration: 1.0), value: progress)
+                // Fortschritts-Linie (füllt sich von links nach rechts)
+                Rectangle()
+                    .frame(width: fillWidth, height: 1)
+                    .foregroundColor(Color.black.opacity(0.85))
+                    .animation(.linear(duration: 1.0), value: progress)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
         }
+        .frame(height: 30)
+        .padding(.horizontal, 0)
     }
 
     // MARK: - Start/Stop Button
@@ -298,7 +301,7 @@ struct ContentView: View {
             if time > 0 {
                 remainingTime! -= 1
                 withAnimation(.linear(duration: 1)) {
-                    progress = CGFloat(Double(remainingTime!) / total)
+                    progress = CGFloat(Double(remainingTime!) / total)   // 1 → 0
                 }
             } else {
                 t.invalidate()
@@ -319,7 +322,7 @@ struct ContentView: View {
         isStarting = false
         isRunning = false
         remainingTime = nil
-        progress = 1.0
+        progress = 1.0      // Linie wird wieder leer
         audioPlayer?.stop()
 
         if useVideo {
