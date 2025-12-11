@@ -1,0 +1,15 @@
+# Xcode user data
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Build folders
+build/
+DerivedData/
+
+# Swift Package Manager
+.build/
+
+# macOS system
+.DS_Store
+
